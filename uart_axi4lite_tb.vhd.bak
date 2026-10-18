@@ -1,0 +1,146 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity uart_axi4lite_tb is
+end entity uart_axi4lite_tb;
+
+architecture sim of uart_axi4lite_tb is
+
+    constant CLK_PERIOD : time := 20 ns;  -- horloge 50 MHz
+
+    signal clk    : std_logic := '0';
+    signal resetn : std_logic := '0';
+
+    signal awaddr  : std_logic_vector(3 downto 0) := (others => '0');
+    signal awvalid : std_logic := '0';
+    signal awready : std_logic;
+    signal wdata   : std_logic_vector(31 downto 0) := (others => '0');
+    signal wvalid  : std_logic := '0';
+    signal wready  : std_logic;
+    signal bresp   : std_logic_vector(1 downto 0);
+    signal bvalid  : std_logic;
+    signal bready  : std_logic := '0';
+
+    signal araddr  : std_logic_vector(3 downto 0) := (others => '0');
+    signal arvalid : std_logic := '0';
+    signal arready : std_logic;
+    signal rdata   : std_logic_vector(31 downto 0);
+    signal rresp   : std_logic_vector(1 downto 0);
+    signal rvalid  : std_logic;
+    signal rready  : std_logic := '0';
+
+    signal serial_line : std_logic;  -- boucle uart_tx -> uart_rx
+
+    -- petite procedure pour ecrire un registre AXI (bloquant jusqu'a bvalid)
+    procedure axi_write(
+        signal clk     : in  std_logic;
+        addr           : in  std_logic_vector(3 downto 0);
+        data           : in  std_logic_vector(31 downto 0);
+        signal awaddr  : out std_logic_vector(3 downto 0);
+        signal awvalid : out std_logic;
+        signal wdata_s : out std_logic_vector(31 downto 0);
+        signal wvalid  : out std_logic;
+        signal bvalid  : in  std_logic;
+        signal bready  : out std_logic
+    ) is
+    begin
+        wait until rising_edge(clk);
+        awaddr <= addr; awvalid <= '1';
+        wdata_s <= data; wvalid <= '1';
+        wait until rising_edge(clk);
+        awvalid <= '0'; wvalid <= '0';
+        wait until bvalid = '1';
+        wait until rising_edge(clk);
+        bready <= '1';
+        wait until rising_edge(clk);
+        bready <= '0';
+    end procedure;
+
+    -- procedure pour lire un registre AXI
+    procedure axi_read(
+        signal clk    : in  std_logic;
+        addr          : in  std_logic_vector(3 downto 0);
+        signal araddr : out std_logic_vector(3 downto 0);
+        signal arvalid: out std_logic;
+        signal rvalid : in  std_logic;
+        signal rready : out std_logic;
+        signal result : in  std_logic_vector(31 downto 0);
+        variable res  : out std_logic_vector(31 downto 0)
+    ) is
+    begin
+        wait until rising_edge(clk);
+        araddr <= addr; arvalid <= '1';
+        wait until rising_edge(clk);
+        arvalid <= '0';
+        wait until rvalid = '1';
+        res := result;
+        rready <= '1';
+        wait until rising_edge(clk);
+        rready <= '0';
+    end procedure;
+
+begin
+
+    ----------------------------------------------------------------
+    -- DUT : ratio CLK/BAUD volontairement petit -> simulation rapide
+    ----------------------------------------------------------------
+    dut : entity work.uart_axi4lite
+        generic map (
+            CLK_FREQ  => 1_000_000,
+            BAUD_RATE => 100_000      -- DIV = 10 cycles/bit, simu rapide
+        )
+        port map (
+            clk => clk, resetn => resetn,
+            s_axi_awaddr => awaddr, s_axi_awvalid => awvalid, s_axi_awready => awready,
+            s_axi_wdata  => wdata,  s_axi_wvalid  => wvalid,  s_axi_wready  => wready,
+            s_axi_bresp  => bresp,  s_axi_bvalid  => bvalid,  s_axi_bready  => bready,
+            s_axi_araddr => araddr, s_axi_arvalid => arvalid, s_axi_arready => arready,
+            s_axi_rdata  => rdata,  s_axi_rresp   => rresp,   s_axi_rvalid  => rvalid, s_axi_rready => rready,
+            uart_tx => serial_line, uart_rx => serial_line   -- LOOPBACK
+        );
+
+    ----------------------------------------------------------------
+    -- horloge
+    ----------------------------------------------------------------
+    clk <= not clk after CLK_PERIOD/2;
+
+    ----------------------------------------------------------------
+    -- sequence de test
+    ----------------------------------------------------------------
+    process
+        variable status_val : std_logic_vector(31 downto 0);
+        variable rxdata_val  : std_logic_vector(31 downto 0);
+    begin
+        -- reset
+        resetn <= '0';
+        wait for 100 ns;
+        resetn <= '1';
+        wait for 100 ns;
+
+        report "Ecriture de l'octet 0x41 ('A') dans TX_DATA";
+        axi_write(clk, "0000", x"00000041",
+                  awaddr, awvalid, wdata, wvalid, bvalid, bready);
+
+        report "Attente de la reception (polling du bit rx_data_ready dans STATUS)";
+        loop
+            axi_read(clk, "1000", araddr, arvalid, rvalid, rready, rdata, status_val);
+            exit when status_val(1) = '1';   -- bit1 = rx_data_ready
+        end loop;
+
+        report "Lecture de RX_DATA";
+        axi_read(clk, "0100", araddr, arvalid, rvalid, rready, rdata, rxdata_val);
+
+        assert rxdata_val(7 downto 0) = x"41"
+            report "ECHEC : octet recu different de l'octet envoye !"
+            severity error;
+
+        report "SUCCES : octet 0x" &
+                to_hstring(unsigned(rxdata_val(7 downto 0))) &
+                " recu correctement via boucle TX->RX";
+
+        wait for 1 us;
+        std.env.stop;
+    end process;
+
+end architecture sim;

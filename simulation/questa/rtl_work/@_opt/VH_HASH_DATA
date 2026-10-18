@@ -1,0 +1,71 @@
+[N
+6
+4
+8 CLK_FREQ
+3
+3 rtl
+1
+66 D:/projet UART avec interface AXI4_LITE/simulation/questa/rtl_work
+6
+13 uart_axi4lite
+2
+9 uart_core
+5
+9 BAUD_RATE
+]
+[G
+1
+6
+3
+1
+4
+1
+0
+1000000
+0
+0 0
+0
+0
+]
+[G
+1
+2
+3
+1
+4
+1
+0
+1000000
+0
+0 0
+0
+0
+]
+[G
+1
+6
+3
+1
+5
+1
+0
+100000
+0
+0 0
+0
+0
+]
+[G
+1
+2
+3
+1
+5
+1
+0
+100000
+0
+0 0
+0
+0
+]

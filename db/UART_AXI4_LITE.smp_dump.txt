@@ -1,0 +1,14 @@
+
+State Machine - |uart_axi4lite|uart_core:u_core|rx_state
+Name rx_state.R_STOP rx_state.R_BITS rx_state.R_START rx_state.R_IDLE 
+rx_state.R_IDLE 0 0 0 0 
+rx_state.R_START 0 0 1 1 
+rx_state.R_BITS 0 1 0 1 
+rx_state.R_STOP 1 0 0 1 
+
+State Machine - |uart_axi4lite|uart_core:u_core|tx_state
+Name tx_state.T_STOP tx_state.T_BITS tx_state.T_START tx_state.T_IDLE 
+tx_state.T_IDLE 0 0 0 0 
+tx_state.T_START 0 0 1 1 
+tx_state.T_BITS 0 1 0 1 
+tx_state.T_STOP 1 0 0 1 

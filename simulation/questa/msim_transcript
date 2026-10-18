@@ -1,0 +1,108 @@
+# Reading pref.tcl
+# //  Questa Altera Starter FPGA Edition-64
+# //  Version 2025.2 win64 May 31 2025
+# //
+# // Unpublished work. Copyright 2025 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# do UART_AXI4_LITE_run_msim_rtl_vhdl.do
+# if {[file exists rtl_work]} {
+# 	vdel -lib rtl_work -all
+# }
+# vlib rtl_work
+# vmap work rtl_work
+# Questa Altera Starter FPGA Edition-64 vmap 2025.2 Lib Mapping Utility 2025.05 May 31 2025
+# vmap work rtl_work 
+# ** Note: (vmap-220) 'd:/questa_fse/win64/../modelsim.ini' is used as the ini file.
+# Copying d:/questa_fse/win64/../modelsim.ini to modelsim.ini
+# Modifying modelsim.ini
+# 
+# vcom -93 -work work {D:/projet UART avec interface AXI4_LITE/uart_core.vhd}
+# Questa Altera Starter FPGA Edition-64 vcom 2025.2 Compiler 2025.05 May 31 2025
+# Start time: 01:18:14 on Oct 18,2026
+# vcom -reportprogress 300 -93 -work work D:/projet UART avec interface AXI4_LITE/uart_core.vhd 
+# ** Note: (vcom-220) 'modelsim.ini' is used as the ini file.
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity uart_core
+# -- Compiling architecture rtl of uart_core
+# End time: 01:18:14 on Oct 18,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# vcom -93 -work work {D:/projet UART avec interface AXI4_LITE/uart_axi4lite.vhd}
+# Questa Altera Starter FPGA Edition-64 vcom 2025.2 Compiler 2025.05 May 31 2025
+# Start time: 01:18:14 on Oct 18,2026
+# vcom -reportprogress 300 -93 -work work D:/projet UART avec interface AXI4_LITE/uart_axi4lite.vhd 
+# ** Note: (vcom-220) 'modelsim.ini' is used as the ini file.
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity uart_axi4lite
+# -- Compiling architecture rtl of uart_axi4lite
+# -- Loading entity uart_core
+# End time: 01:18:14 on Oct 18,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# 
+# vcom -93 -work work {D:/projet UART avec interface AXI4_LITE/uart_axi4lite_tb.vhd}
+# Questa Altera Starter FPGA Edition-64 vcom 2025.2 Compiler 2025.05 May 31 2025
+# Start time: 01:18:14 on Oct 18,2026
+# vcom -reportprogress 300 -93 -work work D:/projet UART avec interface AXI4_LITE/uart_axi4lite_tb.vhd 
+# ** Note: (vcom-220) 'modelsim.ini' is used as the ini file.
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity uart_axi4lite_tb
+# -- Compiling architecture sim of uart_axi4lite_tb
+# -- Loading entity uart_axi4lite
+# End time: 01:18:14 on Oct 18,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# 
+# vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi -L rtl_work -L work -voptargs="+acc"  uart_axi4lite_tb
+# ** Note: (vsim-220) 'modelsim.ini' is used as the ini file.
+# vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L cyclonev_hssi -L rtl_work -L work -voptargs=""+acc"" uart_axi4lite_tb 
+# Start time: 01:18:15 on Oct 18,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# ** Note: (vopt-220) 'modelsim.ini' is used as the ini file.
+# ** Note: (vopt-143) Recognized 2 FSMs in architecture body "uart_core(rtl)".
+# ** Note: (vopt-143) Recognized 2 FSMs in architecture body "uart_axi4lite(rtl)".
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading work.uart_axi4lite_tb(sim)#1
+# Loading work.uart_axi4lite(rtl)#1
+# Loading work.uart_core(rtl)#1
+# 
+# add wave *
+# view structure
+# .main_pane.structure.interior.cs.body.struct
+# view signals
+# .main_pane.objects.interior.cs.body.tree
+# run -all
+# ** Note: [TB] Reset termine.
+#    Time: 200 ns  Iteration: 0  Instance: /uart_axi4lite_tb
+# ** Note: [TB] Test 1 : transmission de 'A' (0x41)
+#    Time: 200 ns  Iteration: 0  Instance: /uart_axi4lite_tb
+# ** Note: [SUCCESS] Caractere 'A' (0x41) transmis et recu avec succes
+#    Time: 2510 ns  Iteration: 0  Instance: /uart_axi4lite_tb
+# ** Note: [TB] Test 2 : transmission de 'B' (0x42)
+#    Time: 2510 ns  Iteration: 0  Instance: /uart_axi4lite_tb
+# ** Note: [SUCCESS] Caractere 'B' (0x42) transmis et recu avec succes
+#    Time: 4830 ns  Iteration: 0  Instance: /uart_axi4lite_tb
+# ** Note: === ALL TESTS PASSED SUCCESSFULLY (SELF-CHECK) ===
+#    Time: 5330 ns  Iteration: 0  Instance: /uart_axi4lite_tb
+# End time: 01:18:54 on Oct 18,2026, Elapsed time: 0:00:39
+# Errors: 0, Warnings: 1

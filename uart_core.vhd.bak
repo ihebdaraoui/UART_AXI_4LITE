@@ -1,0 +1,128 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity uart_core is
+    generic (
+        CLK_FREQ  : integer := 50_000_000;
+        BAUD_RATE : integer := 115_200
+    );
+    port (
+        clk, resetn   : in  std_logic;
+        tx_data       : in  std_logic_vector(7 downto 0);
+        tx_start      : in  std_logic;
+        tx_busy       : out std_logic;
+        rx_data       : out std_logic_vector(7 downto 0);
+        rx_data_ready : out std_logic;
+        rx_data_ack   : in  std_logic;
+        uart_tx       : out std_logic;
+        uart_rx       : in  std_logic
+    );
+end entity uart_core;
+
+architecture rtl of uart_core is
+
+    constant DIV : integer := CLK_FREQ / BAUD_RATE;
+
+    signal cnt, rx_cnt : integer range 0 to DIV-1 := 0;
+    signal tick        : std_logic := '0';
+
+    type tx_st_t is (T_IDLE, T_START, T_BITS, T_STOP);
+    signal tx_st  : tx_st_t := T_IDLE;
+    signal tx_sh  : std_logic_vector(7 downto 0);
+    signal tx_i   : integer range 0 to 7 := 0;
+
+    type rx_st_t is (R_IDLE, R_START, R_BITS, R_STOP);
+    signal rx_st  : rx_st_t := R_IDLE;
+    signal rx_sh  : std_logic_vector(7 downto 0);
+    signal rx_i   : integer range 0 to 7 := 0;
+    signal s1, s2 : std_logic := '1';
+    signal rdy    : std_logic := '0';
+
+begin
+
+    -- tick baud
+    process(clk) begin
+        if rising_edge(clk) then
+            if resetn = '0' then
+                cnt <= 0; tick <= '0';
+            elsif cnt = DIV-1 then
+                cnt <= 0; tick <= '1';
+            else
+                cnt <= cnt + 1; tick <= '0';
+            end if;
+        end if;
+    end process;
+
+    -- emission
+    process(clk) begin
+        if rising_edge(clk) then
+            if resetn = '0' then
+                tx_st <= T_IDLE; uart_tx <= '1'; tx_busy <= '0';
+            else
+                case tx_st is
+                    when T_IDLE =>
+                        uart_tx <= '1'; tx_busy <= '0';
+                        if tx_start = '1' then
+                            tx_sh <= tx_data; tx_i <= 0;
+                            tx_busy <= '1'; tx_st <= T_START;
+                        end if;
+                    when T_START =>
+                        uart_tx <= '0';
+                        if tick = '1' then tx_st <= T_BITS; end if;
+                    when T_BITS =>
+                        uart_tx <= tx_sh(tx_i);
+                        if tick = '1' then
+                            if tx_i = 7 then tx_st <= T_STOP;
+                            else tx_i <= tx_i + 1; end if;
+                        end if;
+                    when T_STOP =>
+                        uart_tx <= '1';
+                        if tick = '1' then tx_st <= T_IDLE; end if;
+                end case;
+            end if;
+        end if;
+    end process;
+
+    -- synchro anti-metastabilite
+    process(clk) begin
+        if rising_edge(clk) then
+            s1 <= uart_rx; s2 <= s1;
+        end if;
+    end process;
+
+    -- reception
+    process(clk) begin
+        if rising_edge(clk) then
+            if resetn = '0' then
+                rx_st <= R_IDLE; rdy <= '0';
+            else
+                if rx_data_ack = '1' then rdy <= '0'; end if;
+                case rx_st is
+                    when R_IDLE =>
+                        if s2 = '0' then
+                            rx_cnt <= DIV/2; rx_st <= R_START;
+                        end if;
+                    when R_START =>
+                        if rx_cnt = DIV-1 then
+                            rx_cnt <= 0; rx_i <= 0; rx_st <= R_BITS;
+                        else rx_cnt <= rx_cnt + 1; end if;
+                    when R_BITS =>
+                        if rx_cnt = DIV-1 then
+                            rx_cnt <= 0; rx_sh(rx_i) <= s2;
+                            if rx_i = 7 then rx_st <= R_STOP;
+                            else rx_i <= rx_i + 1; end if;
+                        else rx_cnt <= rx_cnt + 1; end if;
+                    when R_STOP =>
+                        if rx_cnt = DIV-1 then
+                            rx_cnt <= 0; rdy <= '1'; rx_st <= R_IDLE;
+                        else rx_cnt <= rx_cnt + 1; end if;
+                end case;
+            end if;
+        end if;
+    end process;
+
+    rx_data <= rx_sh;
+    rx_data_ready <= rdy;
+
+end architecture rtl;
